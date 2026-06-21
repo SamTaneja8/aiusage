@@ -10,7 +10,6 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-app-password}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root-password}
     command:
-      - --default-authentication-plugin=mysql_native_password
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     healthcheck:

@@ -195,6 +195,30 @@ Edge:
 curl -I https://aiusage.webmanage.net
 ```
 
+## MySQL startup troubleshooting
+
+If the `mysql:8.4` container fails during first boot with errors like:
+
+- `unknown variable 'default-authentication-plugin=mysql_native_password'`
+- `Table 'mysql.plugin' doesn't exist`
+
+that usually means:
+
+1. the server was started with an invalid MySQL 8.4 option, and
+2. the first initialization left a partially created `./data/mysql` directory behind
+
+After updating the stack config, a brand-new install should use a fresh MySQL data directory.
+
+If this is a first-time local setup and you do not need to preserve any `aiusage` data yet:
+
+```bash
+docker compose down
+rm -rf data/mysql
+./scripts/up.sh
+```
+
+Only remove `data/mysql` when this is a disposable first-time bootstrap. If the stack already contains data you need to keep, stop and recover it instead of deleting the directory.
+
 ## Backup note
 
 This stack stores:

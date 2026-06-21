@@ -9,6 +9,29 @@ This repo is intended to give you:
 - a reverse-proxy target for `aiusage.webmanage.net`
 - a clean separation from the existing `dealstage_db`
 
+## Explicit non-goal
+
+`aiusage` is not intended to proxy scraper traffic or stealth crawl providers.
+
+Do not place crawl traffic for repos like `dealnews1`, `dealmoon1`, or similar scraper jobs through this stack for:
+
+- `DIRECT`
+- `Evomi`
+- `Bright Data`
+- `Decodo`
+- `FloppyData`
+
+Why:
+
+- stealth crawlers need direct control over provider behavior
+- adding a central AI/API gateway introduces an extra hop and a more uniform traffic fingerprint
+- that extra middleware can reduce stealth and make crawl behavior easier to correlate
+
+Recommended boundary:
+
+- use `aiusage` for LLM / model API routing, key management, and usage tracking
+- keep scraper proxy traffic direct from each scraper repo to its configured provider
+
 ## What this stack includes
 
 - `one-api` in Docker
@@ -112,6 +135,7 @@ Why I like it:
 - it keeps usage analytics isolated from `dealstage_db`
 - it fits your existing VPS1 + shared-edge reverse proxy model
 - it lets `reviewgate`, `dealstage`, and future tools target one consistent gateway
+- it keeps AI gateway concerns separate from stealth scraping concerns
 
 Main risks and caveats:
 

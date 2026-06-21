@@ -9,12 +9,39 @@ if [[ ! -f "${ENV_FILE}" ]]; then
   exit 1
 fi
 
-# shellcheck disable=SC1090
-set -a && source "${ENV_FILE}" && set +a
+read_env_value() {
+  local key="$1"
+  local env_file="$2"
+  python3 - "$key" "$env_file" <<'PY'
+import sys
+from pathlib import Path
 
-MYSQL_CONTAINER="${MYSQL_CONTAINER_NAME:-aiusage-mysql}"
+key = sys.argv[1]
+env_file = Path(sys.argv[2])
+
+for raw_line in env_file.read_text(encoding="utf-8").splitlines():
+    line = raw_line.strip()
+    if not line or line.startswith("#") or "=" not in line:
+        continue
+    current_key, value = line.split("=", 1)
+    if current_key.strip() != key:
+        continue
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        value = value[1:-1]
+    print(value)
+    break
+PY
+}
+
+MYSQL_CONTAINER="$(read_env_value "MYSQL_CONTAINER_NAME" "${ENV_FILE}")"
+MYSQL_DATABASE="$(read_env_value "MYSQL_DATABASE" "${ENV_FILE}")"
+MYSQL_ROOT_PASSWORD="$(read_env_value "MYSQL_ROOT_PASSWORD" "${ENV_FILE}")"
+OLLAMA_BASE_URL="$(read_env_value "OLLAMA_BASE_URL" "${ENV_FILE}")"
+ONEAPI_CHANNEL_GROUP="$(read_env_value "ONEAPI_CHANNEL_GROUP" "${ENV_FILE}")"
+
+MYSQL_CONTAINER="${MYSQL_CONTAINER:-aiusage-mysql}"
 MYSQL_DATABASE="${MYSQL_DATABASE:-aiusage_db}"
-MYSQL_ROOT_PASSWORD="${MYSQL_ROOT_PASSWORD:-}"
 OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-http://10.20.0.2:11434}"
 ONEAPI_CHANNEL_GROUP="${ONEAPI_CHANNEL_GROUP:-default}"
 

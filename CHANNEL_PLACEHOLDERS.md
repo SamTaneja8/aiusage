@@ -66,6 +66,13 @@ These three local Ollama channels are also seeded by:
 
 These are not channels by themselves, but they matter operationally.
 
+Important boundary:
+
+- these proxy placeholders are inventory/reference only
+- they should not be routed through `one-api`
+- they should not be used as a central proxy layer for scraper traffic
+- scraper repos should continue to talk to their stealth providers directly
+
 | Inventory item | Placeholder | Recommended use |
 | --- | --- | --- |
 | process-wide relay proxy | `${RELAY_PROXY}` | Force all relay traffic through one outbound proxy |

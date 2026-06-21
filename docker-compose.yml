@@ -1,0 +1,55 @@
+services:
+  mysql:
+    image: ${MYSQL_IMAGE:-mysql:8.4}
+    container_name: ${MYSQL_CONTAINER_NAME:-aiusage-mysql}
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/New_York}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-aiusage_db}
+      MYSQL_USER: ${MYSQL_USER:-aiusage}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me-app-password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root-password}
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - aiusage_internal
+
+  one-api:
+    image: ${ONEAPI_IMAGE:-justsong/one-api:latest}
+    container_name: ${ONEAPI_CONTAINER_NAME:-aiusage-one-api}
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      TZ: ${TZ:-America/New_York}
+      SQL_DSN: ${SQL_DSN}
+      MEMORY_CACHE_ENABLED: ${MEMORY_CACHE_ENABLED:-true}
+      RELAY_PROXY: ${RELAY_PROXY:-}
+      USER_CONTENT_REQUEST_PROXY: ${USER_CONTENT_REQUEST_PROXY:-}
+    ports:
+      - "${ONEAPI_BIND_HOST:-127.0.0.1}:${ONEAPI_HOST_PORT:-3015}:3000"
+    volumes:
+      - ./data/one-api:/data
+    networks:
+      - aiusage_internal
+      - shared_edge
+
+networks:
+  aiusage_internal:
+    name: aiusage_internal
+  shared_edge:
+    external: true
+    name: ${SHARED_EDGE_NETWORK:-shared_edge}
